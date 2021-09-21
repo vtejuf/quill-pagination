@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+<!-- 	<link href="./2.0.0-dev.4/quill.snow.css" rel="stylesheet" />
+	<script src="./2.0.0-dev.4/quill.js"></script> -->
+
+	<link rel="stylesheet" type="text/css" href="./1.3.7/quill.snow.css">
+	<script type="text/javascript" src='./1.3.7/quill.js'></script>
+
+	<style type="text/css">
+		.ql-editor {
+			padding: 0;
+		}
+		/**/
+		#editor {
+			position: relative;
+		}
+		.ql-page-break {
+		    position: relative;
+		    display: inline-block;
+		    width: 100%;
+		    height: 30px;
+		    line-height: 30px;
+		    border: 1px dashed #ccc;
+		    border-width: 1px 0;
+		}
+		.ql-page-break::before {
+		    content: '分页';
+		    position: absolute;
+		    top: 0;
+		    left: 50%;
+		}
+		.ql-page-break-line {
+		    border-bottom: 1px dashed #ccc;
+		}
+		.ql-page-break-line::before {
+		    content: attr(data-number);
+		    right: 0;
+		    position: absolute;
+		    transform: translate(120%, -50%);
+		}
+	</style>
+</head>
+<body>
+	<div id="toolbar">
+	  <button class="ql-bold">Bold</button>
+	  <button class="ql-italic">Italic</button>
+	  <button class="ql-pagination">pagebreak</button>
+	</div>
+
+	<!-- Create the editor container -->
+	<div id="editor">
+	</div>
+
+	<script type="text/javascript">
+	var Embed = Quill.import('blots/block/embed');
+	class PageBreak extends Embed {
+	    static create(value) {
+	        let node = super.create(value);
+	        node.setAttribute('contenteditable', false);
+	        return node;
+	    }
+	}
+	PageBreak.blotName = 'pagination'; //now you can use .ql-hr classname in your toolbar
+	PageBreak.tagName = 'PAGINATION';
+	PageBreak.className = 'ql-page-break';
+	Quill.register({
+	    'formats/pagination': PageBreak
+	});	
+	</script>
+
+	<script type="text/javascript">
+	const Page = {
+		index: 0,
+		top: 0,
+		bottom: 0,
+		number: 0,
+		source: 'api',
+		next: null,
+	}
+	class Pagination {
+		quill = null;
+		options = null;
+		root = null;
+
+		constructor(quill, options) {
+			this.quill = quill;
+			this.options = options;
+			this.root = Object.assign({}, Page);
+
+			this.transOption();
+
+			quill.on('text-change', (delta, oldDelta, source) => {
+				if (source === 'user') {
+					this.mkPage();
+					this.draw();
+				}
+				console.log(this.quill.getContents())
+			})
+
+			this.quill.pagination = this;
+		}
+
+		transOption() {
+			// 页面高度转换
+			const options = this.options;
+			if (typeof options.pageHeight === 'string') {
+				let div = document.createElement('div');
+				div.style.height = options.pageHeight;
+				div.style.position = 'absolute';
+				div.style.zIndex = -9;
+				document.body.appendChild(div);
+				options._h = div.clientHeight;
+				div.remove();
+			} else if (typeof options.pageHeight === 'number') {
+				options._h = options.pageHeight;
+			} else {
+				console.error('[Quill Pagination]:', 'options.pageHeight is required')
+			}
+		}
+
+		mkPage() {
+			const range = this.quill.getSelection(true);
+			// console.log(range)
+
+			const lines = this.quill.getLines(0);
+			// console.log(lines)
+
+			let page = this.root;
+			while(page.next) {
+				if (page.source === 'api') {
+					page.line.remove();
+				}
+				page = page.next;
+			}
+
+			this.root = page = Object.assign({}, Page);
+			// 遇到分页符+1
+			// 高度超过+1
+			// 开始位置等于前1个分页的position
+			lines.forEach(line => {
+				// console.log(line, line.length(), line.offset())
+				const bound = this.quill.getBounds(line.offset() + line.length() - 1, 1);
+				// console.log(bound)
+				// bound.top 超过后，精细计算
+				if ((line instanceof PageBreak) || (bound.bottom - page.top) >= this.options._h) {
+					page.bottom = bound.bottom;
+					page.source = line instanceof PageBreak ? 'user' : 'api';
+					// 分页
+					page.next = Object.assign({}, Page);
+					page.next.top = page.bottom;
+					page.next.number = page.number + 1;
+					page.next.index = line.offset() + line.length();
+					page = page.next;
+				}
+			})
+			// console.log(this.root)
+		}
+
+		draw() {
+			let page = this.root;
+			while(page.next) {
+				if (page.source === 'api') {
+					let line = document.createElement('PAGINATION');
+					line.classList.add('ql-page-break-line');
+					line.style.position = 'absolute';
+					line.style.top = page.bottom + 'px';
+					line.style.left = 0;
+					line.style.right = 0;
+					line.setAttribute('data-number', page.number + 1);
+					// line.style.border = '1px solid #ccc';
+					this.quill.container.appendChild(line);
+					page.line = line;
+				}
+				page = page.next;
+			}
+		}
+	}
+
+	Quill.register('modules/pagination', Pagination);
+	</script>
+
+	<script type="text/javascript">
+	  var editor = new Quill('#editor', {
+	    modules: { 
+	    	toolbar: {
+	    		container: '#toolbar',
+		    	handlers: {
+		    		pagination() {
+		    			const range = this.quill.getSelection();
+		    			const index = range ? range.index : this.quill.getLength();
+		    			this.quill.insertEmbed(index, "pagination", "null", 'user')
+		    			this.quill.setSelection(index + 1)
+		    		},
+		    	}
+	    	},
+	    	pagination: {
+	    		// showNumber: true,
+	    		pageHeight: 100 // 支持css单位
+	    	}
+	    },
+	    theme: 'snow',
+	  });
+	</script>
+</body>
+</html>
