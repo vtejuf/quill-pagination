@@ -1,5 +1,7 @@
 # Quill Pagination
 
+Applicable version: Quill v1.3.7
+
 ```js
 import 'quill-pagination';
 import 'quill-pagination/lib/style.css';
