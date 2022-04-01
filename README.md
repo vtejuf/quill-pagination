@@ -1,1 +1,1 @@
-# quill-pagination
+# Quill Pagination
