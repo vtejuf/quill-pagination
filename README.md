@@ -1,4 +1,6 @@
 # Quill Pagination
+> A CKEditor-like style component
+
 
 Applicable version: Quill v1.3.7
 
