@@ -1,9 +1,11 @@
 # Quill Pagination
 > A CKEditor-like style component
 
-
 Applicable version: Quill v1.3.7
 
+![Example](./src/example.png "quill-pagination")
+
+# Usage
 ```js
 import 'quill-pagination';
 import 'quill-pagination/lib/style.css';
@@ -11,13 +13,11 @@ import 'quill-pagination/lib/style.css';
 new Quill('#container', {
     theme: 'snow',
     modules: {
-        toolbar: {
-            container: '#toolbar'
-        },
+        toolbar: ['pagination'],
         pagination: {
-            userText: "{page} One", // {page} will replaced by Page Number
+            userText: "第{page}页",
             autoText: '{page}',
-            pageHeight: '297mm'
+            pageHeight: '140mm'
         }
     }
 })

@@ -6,13 +6,11 @@ import '../lib/style.css';
 new Quill('#container', {
     theme: 'snow',
     modules: {
-        toolbar: {
-            container: '#toolbar'
-        },
+        toolbar: ['pagination'],
         pagination: {
             userText: "第{page}页",
             autoText: '{page}',
-            pageHeight: '297mm'
+            pageHeight: '80mm'
         }
     }
 })
