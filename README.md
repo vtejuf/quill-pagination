@@ -3,7 +3,7 @@
 
 Applicable version: Quill v1.3.7
 
-![Example](./src/example.png "quill-pagination")
+![Example](/example.png "quill-pagination")
 
 # Usage
 ```js
