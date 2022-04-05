@@ -15,9 +15,9 @@ new Quill('#container', {
     modules: {
         toolbar: ['pagination'],
         pagination: {
-            userText: "第{page}页",
+            userText: "第{page}页", // {page} is replaced with the number of pages
             autoText: '{page}',
-            pageHeight: '140mm'
+            pageHeight: '140mm' // page height of the wrapped line
         }
     }
 })
