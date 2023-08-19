@@ -28,5 +28,8 @@
   "repository": {
     "type": "git",
     "url": "git@github.com:vtejuf/quill-pagination.git"
+  },
+  "resolutions": {
+    "needle": "^3.0.0"
   }
 }
